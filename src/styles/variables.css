@@ -1,0 +1,59 @@
+:root {
+  /* High-End Industrial Palette - Alpha Production Standard */
+  --primary: #020617;
+  --primary-light: #0f172a;
+  --primary-glow: rgba(15, 23, 42, 0.4);
+  --accent: #f97316; /* Trinity Industrial Orange */
+  --accent-glow: rgba(249, 115, 22, 0.25);
+  --emerald: #10b981;
+  --emerald-glow: rgba(16, 185, 129, 0.25);
+  --danger: #f43f5e;
+  --danger-glow: rgba(244, 63, 94, 0.25);
+  --warning: #f59e0b;
+  --warning-glow: rgba(245, 158, 11, 0.25);
+  
+  /* Enterprise Surface Strategy */
+  --bg-main: #f8fafc;
+  --bg-card: #ffffff;
+  --bg-sidebar: #020617;
+  --border: #e2e8f0;
+  --border-strong: #cbd5e1;
+  
+  /* Advanced Glassmorphism 2.0 - Operations Terminal Standard */
+  --glass-bg: rgba(2, 6, 23, 0.65); /* Dark terminal background */
+  --glass-border: rgba(255, 255, 255, 0.08);
+  --glass-blur: blur(24px);
+  --glass-shadow: 0 4px 32px -8px rgba(0, 0, 0, 0.5);
+  --terminal-border: rgba(249, 115, 22, 0.3); /* Industrial Orange Glow */
+
+  /* Elevation Tiers - Tactical Level */
+  --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.2);
+  --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.3);
+  --shadow-lg: 0 12px 24px -6px rgba(0, 0, 0, 0.4);
+  --shadow-xl: 0 20px 48px -12px rgba(0, 0, 0, 0.6);
+  --shadow-inner: inset 0 2px 4px 0 rgba(0, 0, 0, 0.2);
+
+  /* Radius System */
+  --radius-sm: 6px;
+  --radius-md: 10px;
+  --radius-lg: 14px;
+  --radius-xl: 20px;
+  
+  /* Professional Typography - Senior Level */
+  --font-heading: 'Outfit', sans-serif;
+  --font-body: 'Inter', sans-serif;
+  --font-mono: 'JetBrains Mono', monospace;
+  --tracking-tight: -0.02em;
+  --tracking-wide: 0.04em;
+  --tracking-extra: 0.15em;
+}
+
+[data-theme='dark'] {
+  --bg-main: #020617;
+  --bg-card: #0f172a;
+  --text-main: #f8fafc;
+  --text-dim: #94a3b8;
+  --border: #1e293b;
+  --glass-bg: rgba(15, 23, 42, 0.75);
+  --glass-border: rgba(255, 255, 255, 0.04);
+}
