@@ -3,9 +3,9 @@ import { useData, MINERALS, LOCATIONS } from '../../context/DataContext';
 import { Button, Card, Input, Select, Skeleton } from '../common/UI';
 
 const ProductionPage = () => {
-    const { productionLogs, addProductionLog } = useData();
+    const { productionLogs, addProductionLog, workers } = useData();
     const [isLogging, setIsLogging] = useState(false);
-    const [form, setForm] = useState({ mineral: MINERALS[0], location: LOCATIONS[0], quantity: '' });
+    const [form, setForm] = useState({ mineral: MINERALS[0], location: LOCATIONS[0], operator: '', quantity: '' });
     const [isLoading, setIsLoading] = useState(true);
 
     useEffect(() => {
@@ -19,7 +19,7 @@ const ProductionPage = () => {
         if (!qty || qty <= 0) return;
         addProductionLog({ ...form, quantity: qty });
         setIsLogging(false);
-        setForm({ ...form, quantity: '' });
+        setForm({ ...form, operator: '', quantity: '' });
     };
 
     return (
@@ -55,6 +55,7 @@ const ProductionPage = () => {
                                     <tr>
                                         <th>Resource Stream</th>
                                         <th>Extraction Site</th>
+                                        <th>Operator</th>
                                         <th>Net Yield</th>
                                         <th>Audit</th>
                                     </tr>
@@ -64,6 +65,7 @@ const ProductionPage = () => {
                                         <tr key={l.id} className="group hover:bg-slate-50 transition-colors">
                                             <td className="font-black text-accent tracking-tighter">{l.mineral}</td>
                                             <td className="font-bold text-slate-600">{l.location}</td>
+                                            <td className="text-[11px] font-black text-slate-400 uppercase tracking-widest">{l.operator ? l.operator.split('@')[0] : 'UNASSIGNED'}</td>
                                             <td className="font-black text-slate-900">{l.quantity.toFixed(2)} <span className="text-[10px] text-slate-400 font-mono">T</span></td>
                                             <td><span className="tag tag-success">VERIFIED</span></td>
                                         </tr>
@@ -133,6 +135,12 @@ const ProductionPage = () => {
                                 options={LOCATIONS.map(l => ({ label: l, value: l }))}
                                 value={form.location}
                                 onChange={e => setForm({...form, location: e.target.value})}
+                            />
+                            <Select 
+                                label="Assigned Worker / Operator" 
+                                options={[{ label: '-- Select Worker --', value: '' }, ...(workers || []).map(w => ({ label: w.email.split('@')[0], value: w.email }))]}
+                                value={form.operator}
+                                onChange={e => setForm({...form, operator: e.target.value})}
                             />
                             <Input 
                                 label="Net Quantified Volume (Metric Tons)" 

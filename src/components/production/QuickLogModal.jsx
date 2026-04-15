@@ -3,10 +3,11 @@ import { Card, Button } from '../common/UI';
 import { MINERALS, LOCATIONS, useData } from '../../context/DataContext';
 
 const QuickLogModal = ({ isOpen, onClose }) => {
-    const { addProductionLog } = useData();
+    const { addProductionLog, workers } = useData();
     const [formData, setFormData] = useState({
         mineral: MINERALS[0],
         location: LOCATIONS[0],
+        operator: '',
         quantity: ''
     });
 
@@ -20,7 +21,7 @@ const QuickLogModal = ({ isOpen, onClose }) => {
             ...formData,
             quantity: parseFloat(formData.quantity)
         });
-        setFormData({ ...formData, quantity: '' });
+        setFormData({ ...formData, operator: '', quantity: '' });
         onClose();
     };
 
@@ -45,6 +46,17 @@ const QuickLogModal = ({ isOpen, onClose }) => {
                             onChange={(e) => setFormData({...formData, location: e.target.value})}
                         >
                             {LOCATIONS.map(l => <option key={l} value={l}>{l}</option>)}
+                        </select>
+                    </div>
+
+                    <div className="input-group">
+                        <label>Assigned Worker / Operator</label>
+                        <select 
+                            value={formData.operator}
+                            onChange={(e) => setFormData({...formData, operator: e.target.value})}
+                        >
+                            <option value="">-- Select Worker --</option>
+                            {workers?.map(w => <option key={w.email} value={w.email}>{w.email.split('@')[0]}</option>)}
                         </select>
                     </div>
 

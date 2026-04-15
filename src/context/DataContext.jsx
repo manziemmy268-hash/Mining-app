@@ -4,6 +4,7 @@ import * as productionSvc from '../services/productionService';
 import * as attendanceSvc from '../services/attendanceService';
 import * as safetySvc from '../services/safetyService';
 import * as assetsSvc from '../services/assetsService';
+import * as workerSvc from '../services/workerService';
 
 const DataContext = createContext(null);
 
@@ -44,22 +45,25 @@ export const DataProvider = ({ children, showToast }) => {
   const [attendanceLogs, setAttendanceLogs] = useState([]);
   const [safetyIncidents, setSafetyIncidents] = useState([]);
   const [assets, setAssets] = useState([]);
+  const [workers, setWorkers] = useState([]);
   const [dataLoading, setDataLoading] = useState(true);
 
   // ── Initial data fetch ────────────────────────────────────────────────────
   useEffect(() => {
     const fetchAll = async () => {
       setDataLoading(true);
-      const [prod, attend, safety, assetList] = await Promise.all([
+      const [prod, attend, safety, assetList, workerList] = await Promise.all([
         productionSvc.getProductionLogs(),
         attendanceSvc.getAttendanceLogs(),
         safetySvc.getSafetyIncidents(),
         assetsSvc.getAssets(),
+        workerSvc.getWorkers(),
       ]);
       setProductionLogs(prod);
       setAttendanceLogs(attend.map(normalizeAttendance));
       setSafetyIncidents(safety.map(normalizeIncident));
       setAssets(assetList.map(normalizeAsset));
+      setWorkers(workerList);
       setDataLoading(false);
     };
 
@@ -165,6 +169,7 @@ export const DataProvider = ({ children, showToast }) => {
       attendanceLogs, addAttendance, updateAttendance,
       safetyIncidents, addIncident,
       assets,
+      workers,
       dashboardStats,
       dataLoading,
     }}>

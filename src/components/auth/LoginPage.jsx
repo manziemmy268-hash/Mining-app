@@ -10,6 +10,7 @@ const LoginPage = () => {
 
     const roles = [
         { value: 'Mining Supervisor', label: 'Mining Supervisor' },
+        { value: 'Worker', label: 'Worker / Miner' },
         { value: 'HR', label: 'HR' },
         { value: 'Manager', label: 'Manager' },
         { value: 'General Manager', label: 'General Manager' }
