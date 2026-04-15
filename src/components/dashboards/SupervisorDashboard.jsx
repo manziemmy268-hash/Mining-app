@@ -2,10 +2,9 @@ import React, { useState, useEffect } from 'react';
 import { useData } from '../../context/DataContext';
 import { Card, Button, Skeleton } from '../common/UI';
 import QuickLogModal from '../production/QuickLogModal';
-import Leaderboard from '../common/Leaderboard';
 
 const SupervisorDashboard = () => {
-    const { dashboardStats, productionLogs, assets, leaderboardData } = useData();
+    const { dashboardStats, productionLogs, assets } = useData();
     const [isLogModalOpen, setLogModalOpen] = useState(false);
     const [safetyChecked, setSafetyChecked] = useState(false);
     const [isLoading, setIsLoading] = useState(true);
@@ -29,11 +28,11 @@ const SupervisorDashboard = () => {
                     </p>
                 </div>
                 <div className="flex gap-4">
-                    <Button 
-                        variant="secondary" 
+                    <Button
+                        variant="secondary"
                         className="h-12 px-6"
                         onClick={() => setSafetyChecked(!safetyChecked)}
-                        style={{ 
+                        style={{
                             borderColor: safetyChecked ? 'var(--emerald)' : 'var(--border)',
                             color: safetyChecked ? 'var(--emerald)' : 'var(--text-main)',
                             background: safetyChecked ? 'var(--emerald-glow)' : 'transparent'
@@ -49,7 +48,7 @@ const SupervisorDashboard = () => {
 
             <div className="stats-grid mb-12">
                 {isLoading ? (
-                    [1, 2, 3].map(i => <Card key={i}><Skeleton height="1.5rem" width="40%" /><Skeleton height="3rem" className="mt-4" /></Card>)
+                    [1, 2, 3, 4].map(i => <Card key={i}><Skeleton height="1.5rem" width="40%" /><Skeleton height="3rem" className="mt-4" /></Card>)
                 ) : (
                     <>
                         <Card className="border-l-4 border-l-accent shadow-xl shadow-accent/5">
@@ -80,33 +79,35 @@ const SupervisorDashboard = () => {
                 )}
             </div>
 
-            <div style={{ display: 'grid', gridTemplateColumns: '1.2fr 1fr', gap: '2.5rem' }}>
-                <div className="space-y-8">
-                    <Card title="Extraction Activity Stream">
-                        {isLoading ? (
-                            <div className="space-y-4 p-2">
-                                <Skeleton height="3rem" />
-                                <Skeleton height="3rem" />
-                                <Skeleton height="3rem" />
-                            </div>
-                        ) : recentLogs.length > 0 ? (
-                            <div className="table-wrapper">
-                                <table>
-                                    <thead>
-                                        <tr>
-                                            <th>Resource Stream</th>
-                                            <th>Location</th>
-                                            <th>Yield</th>
-                                            <th>Vector</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody>
+            <div style={{ display: 'grid', gridTemplateColumns: '1.6fr 1fr', gap: '2.5rem' }}>
+                <Card title="Extraction Activity Stream">
+                    {/* ... recentLogs table ... */}
+                    {isLoading ? (
+                        <div className="space-y-4 p-2">
+                            <Skeleton height="3rem" />
+                            <Skeleton height="3rem" />
+                            <Skeleton height="3rem" />
+                        </div>
+                    ) : recentLogs.length > 0 ? (
+                        <div className="table-wrapper">
+                            <table>
+                                <thead>
+                                    <tr>
+                                        <th>Resource Stream</th>
+                                        <th>Location</th>
+                                        <th>Yield</th>
+                                        <th>Vector</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
                                         {recentLogs.map(l => (
                                             <tr key={l.id}>
                                                 <td className="font-black text-accent tracking-tight">{l.mineral}</td>
                                                 <td className="font-bold text-slate-600">{l.location}</td>
-                                                <td className="font-black text-slate-900">{l.quantity} <span className="text-[10px] text-slate-400">T</span></td>
-                                                <td className="text-[10px] font-black uppercase text-slate-400 tracking-tighter">{(l.timestamp || l.created_at || '').split('T')[0]}</td>
+                                                <td className="font-black text-slate-900">{parseFloat(l.quantity || 0).toFixed(1)} <span className="text-[10px] text-slate-400">T</span></td>
+                                                <td className="text-[10px] font-black uppercase text-slate-400 tracking-tighter">
+                                                    {(l.timestamp || l.created_at || '').split('T')[0] || (l.timestamp || '').split(' ')[1]}
+                                                </td>
                                             </tr>
                                         ))}
                                     </tbody>
@@ -123,9 +124,9 @@ const SupervisorDashboard = () => {
                     <Card title="Sector Alpha Live Feed">
                         {isLoading ? <Skeleton height="200px" /> : (
                             <div className="relative h-48 rounded-2xl overflow-hidden group">
-                                <img 
-                                    src="/assets/images/underground_shaft.png" 
-                                    alt="Shaft Feed" 
+                                <img
+                                    src="/assets/images/underground_shaft.png"
+                                    alt="Shaft Feed"
                                     className="w-full h-full object-cover transition-transform duration-[15s] group-hover:scale-110"
                                 />
                                 <div className="absolute top-4 left-4 flex items-center gap-2">
@@ -139,10 +140,6 @@ const SupervisorDashboard = () => {
                             </div>
                         )}
                     </Card>
-                </div>
-
-                <div className="flex flex-col gap-8">
-                    <Leaderboard data={leaderboardData} currentUserEmail={null} />
 
                     <Card title="Sector Machinery Status">
                         {isLoading ? (
@@ -156,7 +153,7 @@ const SupervisorDashboard = () => {
                                     <div key={a.id} className="flex justify-between items-center p-5 rounded-2xl bg-white border border-slate-100 shadow-sm hover:border-accent/40 transition-all group">
                                         <div>
                                             <p className="font-black text-sm tracking-tight text-slate-900 group-hover:text-accent transition-colors">{a.name}</p>
-                                            <p className="text-[9px] text-slate-400 tracking-[0.2em] uppercase font-black mt-1 font-mono">{a.id?.slice(0, 8)}</p>
+                                            <p className="text-[9px] text-slate-400 tracking-[0.2em] uppercase font-black mt-1 font-mono">{a.id?.slice(0, 8) || 'N/A'}</p>
                                         </div>
                                         <span className={`tag ${a.status === 'Operational' ? 'tag-success' : 'tag-danger'}`}>
                                             {a.status}
@@ -165,8 +162,10 @@ const SupervisorDashboard = () => {
                                 ))}
                             </div>
                         )}
+                        <Button variant="secondary" className="w-full mt-6 h-12 text-[10px]" disabled={isLoading}>
+                            View Comprehensive Asset Log
+                        </Button>
                     </Card>
-                </div>
             </div>
 
             <QuickLogModal isOpen={isLogModalOpen} onClose={() => setLogModalOpen(false)} />

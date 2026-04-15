@@ -21,11 +21,11 @@ const ManagerDashboard = () => {
             date.setDate(date.getDate() - i);
             const dateStr = date.toDateString();
             const dayName = days[date.getDay()];
-            
+
             const dailyTotal = productionLogs
                 .filter(log => new Date(log.id).toDateString() === dateStr && !log.mineral.includes('Concentrate'))
                 .reduce((sum, log) => sum + parseFloat(log.quantity || 0), 0);
-                
+
             data.push({
                 name: dayName,
                 volume: parseFloat(dailyTotal.toFixed(1)),
@@ -38,10 +38,10 @@ const ManagerDashboard = () => {
     const exportToCSV = () => {
         const headers = ['ID', 'Mineral', 'Location', 'Quantity', 'Status', 'Timestamp'];
         const rows = productionLogs.map(l => [l.id, l.mineral, l.location, l.quantity, l.status, l.timestamp]);
-        const csvContent = "data:text/csv;charset=utf-8," 
+        const csvContent = "data:text/csv;charset=utf-8,"
             + headers.join(",") + "\n"
             + rows.map(e => e.join(",")).join("\n");
-        
+
         const encodedUri = encodeURI(csvContent);
         const link = document.createElement("a");
         link.setAttribute("href", encodedUri);
@@ -106,29 +106,29 @@ const ManagerDashboard = () => {
                 <div className="space-y-8">
                     <Card title="Production Trend (Last 7 Days)">
                         {isLoading ? (
-                             <div className="flex items-end gap-2 h-[200px] px-4">
-                                {[1, 2, 3, 4, 5, 6, 7].map(i => <Skeleton key={i} height={`${Math.random()*60 + 20}%`} width="10%" />)}
-                             </div>
+                            <div className="flex items-end gap-2 h-[200px] px-4">
+                                {[1, 2, 3, 4, 5, 6, 7].map(i => <Skeleton key={i} height={`${Math.random() * 60 + 20}%`} width="10%" />)}
+                            </div>
                         ) : (
                             <div className="h-64 w-full p-6 bg-slate-900/5 rounded-2xl border border-slate-100 flex flex-col justify-between">
                                 <ResponsiveContainer width="100%" height="100%">
                                     <AreaChart data={chartData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
                                         <defs>
                                             <linearGradient id="colorVolume" x1="0" y1="0" x2="0" y2="1">
-                                                <stop offset="5%" stopColor="var(--accent)" stopOpacity={0.3}/>
-                                                <stop offset="95%" stopColor="var(--accent)" stopOpacity={0}/>
+                                                <stop offset="5%" stopColor="var(--accent)" stopOpacity={0.3} />
+                                                <stop offset="95%" stopColor="var(--accent)" stopOpacity={0} />
                                             </linearGradient>
                                         </defs>
                                         <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="rgba(0,0,0,0.05)" />
-                                        <XAxis 
-                                            dataKey="name" 
-                                            axisLine={false} 
-                                            tickLine={false} 
-                                            tick={{fontSize: 10, fontWeight: 900, fill: '#94a3b8'}}
+                                        <XAxis
+                                            dataKey="name"
+                                            axisLine={false}
+                                            tickLine={false}
+                                            tick={{ fontSize: 10, fontWeight: 900, fill: '#94a3b8' }}
                                             dy={10}
                                         />
                                         <YAxis hide domain={[0, 'dataMax + 5']} />
-                                        <Tooltip 
+                                        <Tooltip
                                             content={({ active, payload }) => {
                                                 if (active && payload && payload.length) {
                                                     return (
@@ -141,13 +141,13 @@ const ManagerDashboard = () => {
                                                 return null;
                                             }}
                                         />
-                                        <Area 
-                                            type="monotone" 
-                                            dataKey="volume" 
-                                            stroke="var(--accent)" 
+                                        <Area
+                                            type="monotone"
+                                            dataKey="volume"
+                                            stroke="var(--accent)"
                                             strokeWidth={3}
-                                            fillOpacity={1} 
-                                            fill="url(#colorVolume)" 
+                                            fillOpacity={1}
+                                            fill="url(#colorVolume)"
                                             animationDuration={1500}
                                         />
                                     </AreaChart>
@@ -201,9 +201,9 @@ const ManagerDashboard = () => {
                     <div className="w-full lg:w-3/5 h-64 rounded-3xl overflow-hidden border border-slate-200 relative group shadow-2xl">
                         {isLoading ? <Skeleton height="100%" width="100%" /> : (
                             <>
-                                <img 
-                                    src="/assets/images/control_center.png" 
-                                    alt="Control Center" 
+                                <img
+                                    src="/assets/images/control_center.png"
+                                    alt="Control Center"
                                     className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-1000"
                                 />
                                 <div className="absolute inset-0 bg-gradient-to-r from-slate-900/40 to-transparent"></div>

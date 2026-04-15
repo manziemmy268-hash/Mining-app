@@ -1,12 +1,10 @@
-import React, { useState, useEffect } from 'react';
-import { useAuth } from '../../context/AuthContext';
-import { useData, MONTHLY_TARGET } from '../../context/DataContext';
+import React, { useState, useEffect, useMemo } from 'react';
+import { useData } from '../../context/DataContext';
 import { Card, Skeleton } from '../common/UI';
 import PerformanceGauge from '../common/PerformanceGauge';
 
 const WorkerDashboard = () => {
-    const { user } = useAuth();
-    const { productionLogs } = useData();
+    const { productionLogs, userEmail, MONTHLY_TARGET } = useData();
     const [isLoading, setIsLoading] = useState(true);
 
     useEffect(() => {
@@ -14,121 +12,145 @@ const WorkerDashboard = () => {
         return () => clearTimeout(timer);
     }, []);
 
-    const myLogs = productionLogs.filter(l => l.operator === user?.email);
-    const totalMined = myLogs.reduce((sum, l) => sum + (l.mineral.includes('Concentrate') ? 0 : parseFloat(l.quantity) || 0), 0);
-    
-    // Calculate Monthly Yield (simplified for demo based on all verified logs)
-    const monthlyYield = totalMined; 
+    // Filter logs for this specific worker only
+    const myLogs = useMemo(() => {
+        return productionLogs.filter(log => log.operator === userEmail);
+    }, [productionLogs, userEmail]);
+
+    // Calculate current month's yield (non-concentrate)
+    const monthlyYield = useMemo(() => {
+        const now = new Date();
+        const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+        
+        return myLogs
+            .filter(log => {
+                const logDate = new Date(log.id || log.created_at);
+                return logDate >= startOfMonth && !log.mineral.includes('Concentrate');
+            })
+            .reduce((sum, log) => sum + parseFloat(log.quantity || 0), 0);
+    }, [myLogs]);
+
+    const totalLifeYield = useMemo(() => {
+        return myLogs
+            .filter(l => !l.mineral.includes('Concentrate'))
+            .reduce((sum, log) => sum + parseFloat(log.quantity || 0), 0);
+    }, [myLogs]);
+
+    const targetDelta = Math.max(0, MONTHLY_TARGET - monthlyYield);
+    const progressPercent = Math.min(100, (monthlyYield / MONTHLY_TARGET) * 100);
 
     return (
         <div className="main-content">
-            <header className="mb-12 flex justify-between items-end">
-                <div>
-                    <h1 className="text-4xl font-black tracking-tighter mb-2 italic">Operator Command Node</h1>
-                    <p className="text-[10px] font-black text-slate-500 uppercase tracking-[0.3em] flex items-center gap-2">
-                        <span className="w-2 h-2 rounded-full bg-accent animate-pulse"></span>
-                        Operator: {user?.email?.split('@')[0] || 'Unknown'} // Individual Performance
-                    </p>
-                </div>
-                <div className="bg-white/5 border border-white/10 px-6 py-3 rounded-2xl flex items-center gap-6">
-                    <div>
-                        <p className="text-[8px] font-black text-slate-500 uppercase tracking-widest mb-1">Shift Status</p>
-                        <p className="text-[10px] font-black text-emerald uppercase tracking-tighter">ACTIVE // EN-ROUTE</p>
-                    </div>
-                </div>
+            <header className="mb-12">
+                <h1 className="text-4xl font-black tracking-tighter mb-2 italic">Operator Command Node</h1>
+                <p className="text-[10px] font-black text-slate-500 uppercase tracking-[0.3em] flex items-center gap-2">
+                    <span className="w-2 h-2 rounded-full bg-emerald animate-pulse"></span>
+                    Authenticated: {userEmail} // Sector 4 Active
+                </p>
             </header>
 
-            <div className="responsive-grid mb-12" style={{ gridTemplateColumns: 'minmax(300px, 1fr) 2fr', gap: '2.5rem' }}>
-                <Card className="flex flex-col items-center justify-center py-10 bg-slate-900 border-none shadow-2xl relative overflow-hidden">
-                    {/* Background Decorative Element */}
-                    <div className="absolute top-0 right-0 w-32 h-32 bg-accent/10 rounded-full blur-3xl -mr-16 -mt-16"></div>
-                    
-                    <p className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] mb-8 relative z-10">Monthly Recovery Target</p>
-                    {isLoading ? (
-                        <div className="w-44 h-44 rounded-full border-4 border-white/5 animate-pulse"></div>
-                    ) : (
-                        <PerformanceGauge current={monthlyYield} target={MONTHLY_TARGET} />
-                    )}
-                    <div className="mt-8 text-center relative z-10">
-                        <p className="text-[11px] font-black text-slate-500 uppercase tracking-widest leading-loose">
-                            Current Yield: <span className="text-white font-mono">{monthlyYield.toFixed(2)} / {MONTHLY_TARGET.toFixed(1)} T</span>
-                        </p>
-                    </div>
-                </Card>
-
-                <div className="space-y-6">
-                    <div className="stats-grid" style={{ gridTemplateColumns: '1fr 1fr', gap: '1.5rem' }}>
-                        {isLoading ? (
-                            [1, 2].map(i => <Card key={i}><Skeleton height="1.5rem" width="40%" /><Skeleton height="2.5rem" className="mt-4" /></Card>)
-                        ) : (
-                            <>
-                                <Card className="border-l-4 border-l-accent shadow-lg shadow-accent/5">
-                                    <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest mb-4">Total Life-Cycle Yield</p>
-                                    <div className="stat-value text-3xl text-slate-900">{totalMined.toFixed(1)} <span className="text-xs font-normal text-slate-400">TONS</span></div>
-                                </Card>
-                                <Card className="border-l-4 border-l-emerald shadow-lg shadow-emerald/5">
-                                    <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest mb-4">Verification Audits</p>
-                                    <div className="stat-value text-3xl text-slate-900">{myLogs.length} <span className="text-xs font-normal text-slate-400">LOGS</span></div>
-                                </Card>
-                            </>
-                        )}
-                    </div>
-                    
-                    <Card title="Quick Insights" className="bg-slate-50 border-slate-100">
-                        <div className="space-y-4">
-                            <div className="flex justify-between items-center text-[11px] font-bold text-slate-600">
-                                <span className="uppercase tracking-tighter">Target Delta</span>
-                                <span className={monthlyYield >= MONTHLY_TARGET ? 'text-emerald' : 'text-amber-500'}>
-                                    {monthlyYield >= MONTHLY_TARGET ? 'SURPLUS' : `${(MONTHLY_TARGET - monthlyYield).toFixed(2)}T REMAINING`}
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 350px', gap: '2.5rem' }}>
+                <div className="space-y-8">
+                    <div className="grid grid-cols-2 gap-8">
+                        <Card className="border-l-4 border-l-accent shadow-xl shadow-accent/5">
+                            <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest mb-4">Current Month Yield</p>
+                            <div className="stat-value text-slate-900">{monthlyYield.toFixed(2)} <span className="text-sm font-normal text-slate-400">TONS</span></div>
+                            <div className="flex items-center gap-2 mt-4">
+                                <span className={`tag ${monthlyYield >= MONTHLY_TARGET ? 'tag-success' : 'tag-warning'}`}>
+                                    {monthlyYield >= MONTHLY_TARGET ? 'TARGET MET' : 'IN PROGRESS'}
                                 </span>
                             </div>
-                            <div className="w-full h-1 bg-slate-200 rounded-full overflow-hidden">
-                                <div 
-                                    className="h-full bg-accent transition-all duration-1000" 
-                                    style={{ width: `${Math.min((monthlyYield / MONTHLY_TARGET) * 100, 100)}%` }}
-                                ></div>
+                        </Card>
+                        <Card className="border-l-4 border-l-primary shadow-xl shadow-primary/5">
+                            <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest mb-4">Total Lifecycle Yield</p>
+                            <div className="stat-value text-slate-900">{totalLifeYield.toFixed(1)} <span className="text-sm font-normal text-slate-400">TONS</span></div>
+                            <div className="flex items-center gap-2 mt-4 text-[9px] font-black text-slate-400 uppercase tracking-widest">
+                                Cumulative ROM Output
+                            </div>
+                        </Card>
+                    </div>
+
+                    <Card title="Personal Extraction Log">
+                        {isLoading ? (
+                            <div className="space-y-4 p-2">
+                                <Skeleton height="3rem" />
+                                <Skeleton height="3rem" />
+                                <Skeleton height="3rem" />
+                            </div>
+                        ) : myLogs.length > 0 ? (
+                            <div className="table-wrapper">
+                                <table>
+                                    <thead>
+                                        <tr>
+                                            <th>Stream</th>
+                                            <th>Location</th>
+                                            <th>Quantity</th>
+                                            <th>Timestamp</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {myLogs.slice(0, 8).map(l => (
+                                            <tr key={l.id}>
+                                                <td className="font-black text-accent tracking-tighter">{l.mineral}</td>
+                                                <td className="font-bold text-slate-600">{l.location}</td>
+                                                <td className="font-black text-slate-900">{parseFloat(l.quantity || 0).toFixed(1)} <span className="text-[10px] text-slate-400">T</span></td>
+                                                <td className="text-[10px] font-black uppercase text-slate-400 tracking-tighter">
+                                                    {(l.timestamp || l.created_at || '').split('T')[0]}
+                                                </td>
+                                            </tr>
+                                        ))}
+                                    </tbody>
+                                </table>
+                            </div>
+                        ) : (
+                            <div className="flex flex-col items-center justify-center py-20 bg-slate-50 border border-dashed border-slate-200 rounded-xl">
+                                <span className="text-4xl mb-4 opacity-50">📋</span>
+                                <p className="text-[11px] font-black text-slate-400 uppercase tracking-widest">No personal logs found</p>
+                            </div>
+                        )}
+                    </Card>
+                </div>
+
+                <div className="space-y-8">
+                    <Card title="Performance Status">
+                        <div className="flex flex-col items-center py-6">
+                            <PerformanceGauge progress={progressPercent} label="Monthly Target" />
+                            
+                            <div className="w-full mt-8 space-y-6">
+                                <div className="flex justify-between items-end border-b border-slate-100 pb-4">
+                                    <div>
+                                        <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1">Monthly Goal</p>
+                                        <p className="text-xl font-black text-slate-900">{MONTHLY_TARGET.toFixed(1)} T</p>
+                                    </div>
+                                    <div className="text-right">
+                                        <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1">Remaining</p>
+                                        <p className="text-xl font-black text-accent">{targetDelta.toFixed(2)} T</p>
+                                    </div>
+                                </div>
+                                
+                                <div className="p-4 rounded-2xl bg-slate-50 border border-slate-100">
+                                    <p className="text-[10px] text-slate-500 font-bold leading-relaxed italic">
+                                        "Focus on optimal extraction paths to meet the monthly quota. Efficiency is safety."
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+                    </Card>
+
+                    <Card title="Safety Checklist Status">
+                        <div className="space-y-4">
+                            <div className="flex items-center gap-3 p-3 rounded-xl bg-emerald/5 border border-emerald/10">
+                                <span className="text-emerald">✔</span>
+                                <p className="text-[11px] font-bold text-slate-700 uppercase tracking-tight">PPE Compliance Verified</p>
+                            </div>
+                            <div className="flex items-center gap-3 p-3 rounded-xl bg-emerald/5 border border-emerald/10">
+                                <span className="text-emerald">✔</span>
+                                <p className="text-[11px] font-bold text-slate-700 uppercase tracking-tight">Shaft V4 Pre-check</p>
                             </div>
                         </div>
                     </Card>
                 </div>
             </div>
-
-            <Card title="Individual Extraction Manifest">
-                {isLoading ? (
-                    <div className="space-y-4 p-2">
-                        <Skeleton height="3.5rem" />
-                        <Skeleton height="3.5rem" />
-                    </div>
-                ) : myLogs.length > 0 ? (
-                    <div className="table-wrapper">
-                        <table>
-                            <thead>
-                                <tr>
-                                    <th>Resource Stream</th>
-                                    <th>Extraction Site</th>
-                                    <th>Net Yield</th>
-                                    <th>Timestamp</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                {myLogs.map(l => (
-                                    <tr key={l.id} className="group hover:bg-slate-50 transition-colors">
-                                        <td className="font-black text-accent tracking-tighter">{l.mineral}</td>
-                                        <td className="font-bold text-slate-600">{l.location}</td>
-                                        <td className="font-black text-slate-900">{parseFloat(l.quantity).toFixed(2)} <span className="text-[10px] text-slate-400 font-mono">T</span></td>
-                                        <td className="font-mono text-[10px] font-black text-slate-400 tracking-widest">{l.timestamp || l.created_at}</td>
-                                    </tr>
-                                ))}
-                            </tbody>
-                        </table>
-                    </div>
-                ) : (
-                    <div className="flex flex-col items-center justify-center py-20 bg-slate-50 border border-dashed border-slate-200 rounded-2xl">
-                        <span className="text-4xl mb-4 opacity-30">📋</span>
-                        <p className="text-[11px] font-black text-slate-400 uppercase tracking-[0.2em]">No extraction cycles recorded for your profile</p>
-                    </div>
-                )}
-            </Card>
         </div>
     );
 };

@@ -11,7 +11,7 @@ const GMDashboard = () => {
         const timer = setTimeout(() => setIsLoading(false), 800);
         return () => clearTimeout(timer);
     }, []);
-    
+
     // Simulating ROI Logic
     const yieldEfficiency = ((dashboardStats.totalConcentrate / (dashboardStats.totalProduction || 1)) * 100).toFixed(1);
     const costPerTon = (840 + (dashboardStats.activePersonnel * 12.5)).toFixed(0);
@@ -37,9 +37,9 @@ const GMDashboard = () => {
                     <Skeleton height="100%" width="100%" />
                 ) : (
                     <>
-                        <img 
-                            src="/assets/images/aerial_mine.png" 
-                            alt="Satellite Feed" 
+                        <img
+                            src="/assets/images/aerial_mine.png"
+                            alt="Satellite Feed"
                             className="w-full h-full object-cover transition-transform duration-[20s] group-hover:scale-110"
                         />
                         <div className="absolute inset-0 bg-gradient-to-t from-slate-900/80 via-transparent to-transparent"></div>
@@ -87,7 +87,7 @@ const GMDashboard = () => {
                                 <span className="tag tag-success">COMPLIANT</span>
                             </div>
                         </Card>
-                         <Card className="border-l-4 border-l-primary shadow-2xl shadow-primary/5">
+                        <Card className="border-l-4 border-l-primary shadow-2xl shadow-primary/5">
                             <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest mb-4">Active Staffing</p>
                             <div className="stat-value text-slate-900">{dashboardStats.activePersonnel} <span className="text-sm font-normal text-slate-400 font-mono">OFFICERS</span></div>
                             <div className="mt-6 flex items-center gap-2 text-[9px] font-black text-slate-400 uppercase tracking-widest">
@@ -100,7 +100,7 @@ const GMDashboard = () => {
 
             <div style={{ display: 'grid', gridTemplateColumns: 'minmax(0, 1fr) 350px 300px', gap: '2.5rem' }}>
                 <Card title="Global Extraction Breakdown">
-                    {isLoading ? <div className="space-y-4"><Skeleton height="3rem"/><Skeleton height="3rem"/></div> : (
+                    {isLoading ? <div className="space-y-4"><Skeleton height="3rem" /><Skeleton height="3rem" /></div> : (
                         <div className="table-wrapper">
                             <table>
                                 <thead>
@@ -114,7 +114,7 @@ const GMDashboard = () => {
                                     {['Wolframite (ROM)', 'Tungsten Concentrate', 'Waste Rock'].map(m => (
                                         <tr key={m}>
                                             <td className="font-black text-accent tracking-tighter">{m}</td>
-                                            <td className="font-black text-slate-900">{productionLogs.filter(l => l.mineral === m).reduce((s, l) => s+parseFloat(l.quantity || 0), 0).toFixed(1)} <span className="text-[10px] text-slate-400 font-mono">T</span></td>
+                                            <td className="font-black text-slate-900">{productionLogs.filter(l => l.mineral === m).reduce((s, l) => s + parseFloat(l.quantity || 0), 0).toFixed(1)} <span className="text-[10px] text-slate-400 font-mono">T</span></td>
                                             <td>
                                                 <div className="flex items-center gap-2">
                                                     <span className="text-xs font-black">{Math.floor(Math.random() * 5 + 92)}%</span>
@@ -147,7 +147,7 @@ const GMDashboard = () => {
                 <Leaderboard data={leaderboardData} currentUserEmail={null} title="Sector Performance Matrix" />
 
                 <Card title="Compliance Shield">
-                    {isLoading ? <Skeleton height="150px"/> : (
+                    {isLoading ? <Skeleton height="150px" /> : (
                         <div className="flex flex-col items-center justify-center h-full py-6">
                             <div className="relative group">
                                 <div className="w-24 h-24 rounded-full border-4 border-emerald/10 flex items-center justify-center group-hover:border-emerald/30 transition-all duration-500">
