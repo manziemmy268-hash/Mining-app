@@ -1,5 +1,9 @@
-import React, { createContext, useContext, useMemo } from 'react';
-import { useLocalStorage } from '../hooks/useLocalStorage';
+import React, { createContext, useContext, useState, useEffect, useMemo } from 'react';
+import { supabase } from '../lib/supabase';
+import * as productionSvc from '../services/productionService';
+import * as attendanceSvc from '../services/attendanceService';
+import * as safetySvc from '../services/safetyService';
+import * as assetsSvc from '../services/assetsService';
 
 const DataContext = createContext(null);
 
@@ -7,75 +11,150 @@ export const MINERALS = ['Wolframite (ROM)', 'Tungsten Concentrate', 'Waste Rock
 export const LOCATIONS = ['Shaft 4 (Upper)', 'Main Adit (Underground)', 'Open Pit North', 'Processing Plant A', 'Tailings Facility'];
 export const SHIFTS = ['Shift A (6AM - 2PM)', 'Shift B (2PM - 10PM)', 'Shift C (10PM - 6AM)'];
 
+// Normalize DB row (snake_case) → camelCase for components
+const normalizeAttendance = (row) => ({
+  id: row.id,
+  email: row.email,
+  shift: row.shift,
+  checkIn: row.check_in,
+  checkOut: row.check_out,
+  status: row.status,
+  created_at: row.created_at,
+});
+
+const normalizeIncident = (row) => ({
+  id: row.id,
+  type: row.type,
+  location: row.location,
+  severity: row.severity,
+  description: row.description,
+  reportedBy: row.reported_by,
+  timestamp: row.created_at,
+});
+
+const normalizeAsset = (row) => ({
+  id: row.id,
+  name: row.name,
+  status: row.status,
+  lastMaintenance: row.last_maintenance,
+});
+
 export const DataProvider = ({ children, showToast }) => {
-  const [productionLogs, setProductionLogs] = useLocalStorage('tnom_production', [
-    { id: Date.now() - (6 * 24 * 60 * 60 * 1000), mineral: "Wolframite (ROM)", location: "Main Adit (Underground)", quantity: 12.5, status: "Verified", timestamp: "09:00 AM", operator: "admin@trinitymetals.rw" },
-    { id: Date.now() - (5 * 24 * 60 * 60 * 1000), mineral: "Wolframite (ROM)", location: "Open Pit North", quantity: 14.2, status: "Verified", timestamp: "11:30 AM", operator: "admin@trinitymetals.rw" },
-    { id: Date.now() - (4 * 24 * 60 * 60 * 1000), mineral: "Wolframite (ROM)", location: "Shaft 4 (Upper)", quantity: 10.8, status: "Verified", timestamp: "02:15 PM", operator: "admin@trinitymetals.rw" },
-    { id: Date.now() - (3 * 24 * 60 * 60 * 1000), mineral: "Wolframite (ROM)", location: "Main Adit (Underground)", quantity: 16.1, status: "Verified", timestamp: "08:45 AM", operator: "admin@trinitymetals.rw" },
-    { id: Date.now() - (2 * 24 * 60 * 60 * 1000), mineral: "Wolframite (ROM)", location: "Processing Plant A", quantity: 13.4, status: "Verified", timestamp: "10:00 AM", operator: "admin@trinitymetals.rw" },
-    { id: Date.now() - (1 * 24 * 60 * 60 * 1000), mineral: "Wolframite (ROM)", location: "Open Pit North", quantity: 18.5, status: "Verified", timestamp: "04:30 PM", operator: "admin@trinitymetals.rw" },
-    { id: Date.now(), mineral: "Wolframite (ROM)", location: "Main Adit (Underground)", quantity: 15.5, status: "Verified", timestamp: "09:15 AM", operator: "admin@trinitymetals.rw" }
-  ]);
+  const [productionLogs, setProductionLogs] = useState([]);
+  const [attendanceLogs, setAttendanceLogs] = useState([]);
+  const [safetyIncidents, setSafetyIncidents] = useState([]);
+  const [assets, setAssets] = useState([]);
+  const [dataLoading, setDataLoading] = useState(true);
 
-  const [attendanceLogs, setAttendanceLogs] = useLocalStorage('tnom_attendance', []);
-  const [safetyIncidents, setSafetyIncidents] = useLocalStorage('tnom_safety', []);
-  const [assets, setAssets] = useLocalStorage('tnom_assets', [
-    { id: 'BC-01', name: 'Bobcat S450', status: 'Operational', lastMaintenance: '2024-03-25' },
-    { id: 'VN-04', name: 'Ventilation Fan #4', status: 'Operational', lastMaintenance: '2024-03-20' },
-    { id: 'PM-02', name: 'Dewatering Pump B', status: 'Maintenance', lastMaintenance: '2024-03-29' }
-  ]);
-
-  const addProductionLog = (log) => {
-    const newLog = {
-      id: Date.now(),
-      ...log,
-      status: 'Verified',
-      timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+  // ── Initial data fetch ────────────────────────────────────────────────────
+  useEffect(() => {
+    const fetchAll = async () => {
+      setDataLoading(true);
+      const [prod, attend, safety, assetList] = await Promise.all([
+        productionSvc.getProductionLogs(),
+        attendanceSvc.getAttendanceLogs(),
+        safetySvc.getSafetyIncidents(),
+        assetsSvc.getAssets(),
+      ]);
+      setProductionLogs(prod);
+      setAttendanceLogs(attend.map(normalizeAttendance));
+      setSafetyIncidents(safety.map(normalizeIncident));
+      setAssets(assetList.map(normalizeAsset));
+      setDataLoading(false);
     };
-    setProductionLogs([newLog, ...productionLogs]);
-    showToast('Production Extract Logged Successfully.');
-  };
 
-  const addAttendance = (email, shift) => {
-    const newLog = {
-      id: Date.now(),
-      email,
-      shift,
-      checkIn: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-      checkOut: '--:--',
-      status: 'On Site'
+    fetchAll();
+  }, []);
+
+  // ── Real-time subscriptions ───────────────────────────────────────────────
+  useEffect(() => {
+    const prodChannel = supabase
+      .channel('production_logs_changes')
+      .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'production_logs' }, (payload) => {
+        setProductionLogs((prev) => [payload.new, ...prev]);
+      })
+      .subscribe();
+
+    const attendChannel = supabase
+      .channel('attendance_logs_changes')
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'attendance_logs' }, () => {
+        // Re-fetch on any change for simplicity
+        attendanceSvc.getAttendanceLogs().then((data) =>
+          setAttendanceLogs(data.map(normalizeAttendance))
+        );
+      })
+      .subscribe();
+
+    const safetyChannel = supabase
+      .channel('safety_incidents_changes')
+      .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'safety_incidents' }, (payload) => {
+        setSafetyIncidents((prev) => [normalizeIncident(payload.new), ...prev]);
+      })
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(prodChannel);
+      supabase.removeChannel(attendChannel);
+      supabase.removeChannel(safetyChannel);
     };
-    setAttendanceLogs([newLog, ...attendanceLogs]);
-    showToast(`Checked into ${shift} for active duty.`);
-    return newLog;
+  }, []);
+
+  // ── Actions ───────────────────────────────────────────────────────────────
+  const addProductionLog = async (log) => {
+    const newLog = await productionSvc.addProductionLog(log);
+    if (newLog) {
+      // Real-time subscription will update the list automatically
+      showToast('Production Extract Logged Successfully.');
+    } else {
+      showToast('Error logging production entry. Please try again.');
+    }
   };
 
-  const updateAttendance = (id) => {
-    const checkOutTime = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-    setAttendanceLogs(attendanceLogs.map(l => 
-      l.id === id ? { ...l, checkOut: checkOutTime, status: 'Checked Out' } : l
-    ));
-    showToast('Shift Ended. Duty Completed.');
+  const addAttendance = async (email, shift) => {
+    const newLog = await attendanceSvc.addAttendanceLog({ email, shift });
+    if (newLog) {
+      const normalized = normalizeAttendance(newLog);
+      setAttendanceLogs((prev) => [normalized, ...prev]);
+      showToast(`Checked into ${shift} for active duty.`);
+      return normalized;
+    }
+    showToast('Error logging attendance. Please try again.');
+    return null;
   };
 
-  const addIncident = (incident) => {
-    const newIncident = {
-      id: Date.now(),
-      ...incident,
-      timestamp: new Date().toLocaleString()
-    };
-    setSafetyIncidents([newIncident, ...safetyIncidents]);
-    showToast('Safety Incident Logged. Safety Officer Notified.');
+  const updateAttendance = async (id) => {
+    const updated = await attendanceSvc.updateAttendanceCheckOut(id);
+    if (updated) {
+      setAttendanceLogs((prev) =>
+        prev.map((l) => (l.id === id ? normalizeAttendance(updated) : l))
+      );
+      showToast('Shift Ended. Duty Completed.');
+    }
   };
 
+  const addIncident = async (incident) => {
+    const newIncident = await safetySvc.addSafetyIncident(incident);
+    if (newIncident) {
+      // Real-time subscription will update the list automatically
+      showToast('Safety Incident Logged. Safety Officer Notified.');
+    } else {
+      showToast('Error logging incident. Please try again.');
+    }
+  };
+
+  // ── Dashboard stats ───────────────────────────────────────────────────────
   const dashboardStats = useMemo(() => {
-    const totalProduction = productionLogs.reduce((sum, l) => sum + (l.mineral.includes('Concentrate') ? 0 : l.quantity), 0);
-    const totalConcentrate = productionLogs.reduce((sum, l) => sum + (l.mineral.includes('Concentrate') ? l.quantity : 0), 0);
-    const activePersonnel = attendanceLogs.filter(l => l.status === 'On Site').length;
-    const daysSinceIncident = safetyIncidents.length > 0 
-      ? Math.floor((Date.now() - new Date(safetyIncidents[0].timestamp).getTime()) / (1000 * 60 * 60 * 24))
-      : 342; // Placeholder for established mine
+    const totalProduction = productionLogs.reduce(
+      (sum, l) => sum + (l.mineral?.includes('Concentrate') ? 0 : parseFloat(l.quantity) || 0), 0
+    );
+    const totalConcentrate = productionLogs.reduce(
+      (sum, l) => sum + (l.mineral?.includes('Concentrate') ? parseFloat(l.quantity) || 0 : 0), 0
+    );
+    const activePersonnel = attendanceLogs.filter((l) => l.status === 'On Site').length;
+    const daysSinceIncident =
+      safetyIncidents.length > 0
+        ? Math.floor((Date.now() - new Date(safetyIncidents[0].timestamp).getTime()) / (1000 * 60 * 60 * 24))
+        : 342;
 
     return { totalProduction, totalConcentrate, activePersonnel, daysSinceIncident };
   }, [productionLogs, attendanceLogs, safetyIncidents]);
@@ -86,7 +165,8 @@ export const DataProvider = ({ children, showToast }) => {
       attendanceLogs, addAttendance, updateAttendance,
       safetyIncidents, addIncident,
       assets,
-      dashboardStats
+      dashboardStats,
+      dataLoading,
     }}>
       {children}
     </DataContext.Provider>
@@ -94,7 +174,7 @@ export const DataProvider = ({ children, showToast }) => {
 };
 
 export const useData = () => {
-    const context = useContext(DataContext);
-    if (!context) throw new Error('useData must be used within DataProvider');
-    return context;
+  const context = useContext(DataContext);
+  if (!context) throw new Error('useData must be used within DataProvider');
+  return context;
 };
