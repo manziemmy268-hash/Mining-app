@@ -166,7 +166,7 @@ input:focus {
 
 /* --- Professional Tables --- */
 .table-wrapper {
-  overflow: hidden;
+  overflow-x: auto;
   border-radius: var(--radius-lg);
   border: 1px solid var(--border);
   background: var(--bg-card);
@@ -401,4 +401,51 @@ aside {
 @keyframes scanLine {
   from { transform: translateY(0); }
   to { transform: translateY(11rem); }
+}
+
+/* --- Mobile Responsiveness --- */
+@media (max-width: 768px) {
+  .main-content {
+    padding: 1rem !important;
+    padding-bottom: 6rem !important; /* Space for fixed bottom nav */
+  }
+
+  .stats-grid {
+    grid-template-columns: 1fr !important;
+    gap: 1rem !important;
+  }
+
+  .desktop-only {
+    display: none !important;
+  }
+
+  .mobile-only {
+    display: flex !important;
+  }
+
+  .responsive-grid {
+    grid-template-columns: 1fr !important;
+    display: flex !important;
+    flex-direction: column !important;
+  }
+
+  /* Auto shrink typography for mobile */
+  .text-4xl { font-size: 1.75rem !important; line-height: 1.2 !important; }
+  .text-3xl { font-size: 1.5rem !important; line-height: 1.2 !important;}
+  .text-2xl { font-size: 1.25rem !important; }
+  
+  /* Make cards use less padding */
+  .card {
+     padding: 1.25rem !important;
+  }
+  
+  th, td {
+      padding: 0.75rem 1rem !important;
+  }
+}
+
+@media (min-width: 769px) {
+  .mobile-only {
+    display: none !important;
+  }
 }

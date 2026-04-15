@@ -38,7 +38,7 @@ const ProductionPage = () => {
                 </Button>
             </header>
 
-            <div style={{ display: 'grid', gridTemplateColumns: '1.2fr 1fr', gap: '2.5rem', marginBottom: '2.5rem' }}>
+            <div className="responsive-grid" style={{ display: 'grid', gridTemplateColumns: '1.2fr 1fr', gap: '2.5rem', marginBottom: '2.5rem' }}>
                 <Card title="Global Extraction Manifest">
                     {isLoading ? (
                         <div className="space-y-4 p-2">

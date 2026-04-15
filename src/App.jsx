@@ -53,8 +53,8 @@ const DashboardShell = () => {
     return (
         <div className="app-layout" style={{ height: '100vh', overflow: 'hidden' }}>
             <Navbar />
-            <div className="flex" style={{ flex: 1, overflow: 'hidden' }}>
-                <aside style={{ width: '280px', display: 'flex', flexDirection: 'column' }}>
+            <div className="flex" style={{ flex: 1, overflow: 'hidden', position: 'relative' }}>
+                <aside className="desktop-only" style={{ width: '280px', display: 'flex', flexDirection: 'column' }}>
                     <div className="mb-10 px-2">
                         <p className="text-[10px] tracking-[0.3em] font-black text-slate-500 uppercase">Sector Command</p>
                     </div>
@@ -103,6 +103,27 @@ const DashboardShell = () => {
                         </RoleGuard>
                     )}
                 </main>
+
+                {/* Mobile Bottom Navigation */}
+                <nav className="mobile-only" style={{
+                    position: 'fixed', bottom: 0, left: 0, right: 0,
+                    height: '5.5rem', background: 'var(--bg-sidebar)', borderTop: '1px solid rgba(255,255,255,0.1)',
+                    display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '0 0.5rem', zIndex: 50
+                }}>
+                    {allowedMenu.map(item => (
+                        <button
+                            key={item.id}
+                            onClick={() => setView(item.id)}
+                            style={{ flex: 1, height: '100%', display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center', gap: '0.35rem', border: 'none', background: 'none' }}
+                            className={`transition-colors ${view === item.id ? 'text-accent' : 'text-slate-500'}`}
+                        >
+                            <span className="text-xl">{item.label.split(' ')[0]}</span>
+                            <span className="text-[9px] font-black uppercase tracking-widest leading-none text-center">
+                                {item.label.split(' ').slice(1).join(' ')}
+                            </span>
+                        </button>
+                    ))}
+                </nav>
             </div>
         </div>
     );

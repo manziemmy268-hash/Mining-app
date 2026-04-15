@@ -15,7 +15,7 @@ const Navbar = () => {
           />
         </div>
         
-        <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-emerald/10 border border-emerald/20">
+        <div className="desktop-only items-center gap-2 px-3 py-1.5 rounded-full bg-emerald/10 border border-emerald/20">
            <div className="w-1.5 h-1.5 rounded-full bg-emerald animate-pulse"></div>
            <span className="text-[10px] font-black tracking-widest text-emerald uppercase">Secure Link Active</span>
         </div>

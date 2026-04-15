@@ -28,7 +28,7 @@ const WorkerDashboard = () => {
                 </div>
             </header>
 
-            <div className="stats-grid mb-12" style={{ gridTemplateColumns: '1fr 1fr' }}>
+            <div className="stats-grid responsive-grid mb-12" style={{ gridTemplateColumns: '1fr 1fr' }}>
                 {isLoading ? (
                     [1, 2].map(i => <Card key={i}><Skeleton height="1.5rem" width="40%" /><Skeleton height="3rem" className="mt-4" /></Card>)
                 ) : (
