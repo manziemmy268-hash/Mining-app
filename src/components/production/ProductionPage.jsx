@@ -138,7 +138,7 @@ const ProductionPage = () => {
                             />
                             <Select 
                                 label="Assigned Worker / Operator" 
-                                options={[{ label: '-- Select Worker --', value: '' }, ...(workers || []).map(w => ({ label: w.email.split('@')[0], value: w.email }))]}
+                                options={[{ label: '-- Select Worker --', value: '' }, ...(workers || []).map(w => ({ label: w?.email?.split('@')[0] || 'Unknown', value: w.email }))]}
                                 value={form.operator}
                                 onChange={e => setForm({...form, operator: e.target.value})}
                             />

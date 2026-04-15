@@ -56,7 +56,7 @@ const QuickLogModal = ({ isOpen, onClose }) => {
                             onChange={(e) => setFormData({...formData, operator: e.target.value})}
                         >
                             <option value="">-- Select Worker --</option>
-                            {workers?.map(w => <option key={w.email} value={w.email}>{w.email.split('@')[0]}</option>)}
+                            {workers?.map(w => <option key={w.email} value={w.email}>{w?.email?.split('@')[0] || 'Unknown'}</option>)}
                         </select>
                     </div>
 

@@ -11,6 +11,7 @@ const DataContext = createContext(null);
 export const MINERALS = ['Wolframite (ROM)', 'Tungsten Concentrate', 'Waste Rock', 'Tailings'];
 export const LOCATIONS = ['Shaft 4 (Upper)', 'Main Adit (Underground)', 'Open Pit North', 'Processing Plant A', 'Tailings Facility'];
 export const SHIFTS = ['Shift A (6AM - 2PM)', 'Shift B (2PM - 10PM)', 'Shift C (10PM - 6AM)'];
+export const MONTHLY_TARGET = 1.0; // Metric Tons
 
 // Normalize DB row (snake_case) → camelCase for components
 const normalizeAttendance = (row) => ({
@@ -163,6 +164,23 @@ export const DataProvider = ({ children, showToast }) => {
     return { totalProduction, totalConcentrate, activePersonnel, daysSinceIncident };
   }, [productionLogs, attendanceLogs, safetyIncidents]);
 
+  // ── Leaderboards & Personal Analytics ──────────────────────────────────────
+  const leaderboardData = useMemo(() => {
+    const workerTotals = {};
+    productionLogs.forEach(log => {
+      const email = log.operator || 'Unknown';
+      if (!workerTotals[email]) workerTotals[email] = 0;
+      // Only count raw ore (not concentrate) for simple extraction leaderboard
+      if (!log.mineral?.includes('Concentrate')) {
+        workerTotals[email] += parseFloat(log.quantity) || 0;
+      }
+    });
+
+    return Object.entries(workerTotals)
+      .map(([email, total]) => ({ email, total }))
+      .sort((a, b) => b.total - a.total);
+  }, [productionLogs]);
+
   return (
     <DataContext.Provider value={{
       productionLogs, addProductionLog,
@@ -171,6 +189,7 @@ export const DataProvider = ({ children, showToast }) => {
       assets,
       workers,
       dashboardStats,
+      leaderboardData,
       dataLoading,
     }}>
       {children}

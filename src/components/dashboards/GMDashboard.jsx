@@ -1,9 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { useData } from '../../context/DataContext';
 import { Card, Skeleton } from '../common/UI';
+import Leaderboard from '../common/Leaderboard';
 
 const GMDashboard = () => {
-    const { dashboardStats, productionLogs } = useData();
+    const { dashboardStats, productionLogs, leaderboardData } = useData();
     const [isLoading, setIsLoading] = useState(true);
 
     useEffect(() => {
@@ -73,10 +74,10 @@ const GMDashboard = () => {
                             </div>
                         </Card>
                         <Card className="border-l-4 border-l-emerald shadow-2xl shadow-emerald/5">
-                            <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest mb-4">Net Yield Efficiency</p>
-                            <div className="stat-value text-slate-900">{yieldEfficiency}%</div>
+                            <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest mb-4">Personnel Performance</p>
+                            <div className="stat-value text-slate-900">{leaderboardData.filter(e => e.total >= 1).length} <span className="text-sm font-normal text-slate-400">ON TARGET</span></div>
                             <div className="mt-6 flex justify-between items-baseline">
-                                <span className="text-[9px] font-black text-emerald uppercase tracking-widest">Industry Leader</span>
+                                <span className="text-[9px] font-black text-emerald uppercase tracking-widest">Goal: 1T / Monthly</span>
                             </div>
                         </Card>
                         <Card className="border-l-4 border-l-danger shadow-2xl shadow-danger/5">
@@ -97,7 +98,7 @@ const GMDashboard = () => {
                 )}
             </div>
 
-            <div style={{ display: 'grid', gridTemplateColumns: '1.2fr 1fr 1fr', gap: '2.5rem' }}>
+            <div style={{ display: 'grid', gridTemplateColumns: 'minmax(0, 1fr) 350px 300px', gap: '2.5rem' }}>
                 <Card title="Global Extraction Breakdown">
                     {isLoading ? <div className="space-y-4"><Skeleton height="3rem"/><Skeleton height="3rem"/></div> : (
                         <div className="table-wrapper">
@@ -113,7 +114,7 @@ const GMDashboard = () => {
                                     {['Wolframite (ROM)', 'Tungsten Concentrate', 'Waste Rock'].map(m => (
                                         <tr key={m}>
                                             <td className="font-black text-accent tracking-tighter">{m}</td>
-                                            <td className="font-black text-slate-900">{productionLogs.filter(l => l.mineral === m).reduce((s, l) => s+l.quantity, 0).toFixed(1)} <span className="text-[10px] text-slate-400 font-mono">T</span></td>
+                                            <td className="font-black text-slate-900">{productionLogs.filter(l => l.mineral === m).reduce((s, l) => s+parseFloat(l.quantity || 0), 0).toFixed(1)} <span className="text-[10px] text-slate-400 font-mono">T</span></td>
                                             <td>
                                                 <div className="flex items-center gap-2">
                                                     <span className="text-xs font-black">{Math.floor(Math.random() * 5 + 92)}%</span>
@@ -125,27 +126,27 @@ const GMDashboard = () => {
                             </table>
                         </div>
                     )}
-                </Card>
-
-                <Card title="Executive ROI Gradient">
-                    {isLoading ? <Skeleton height="150px"/> : (
-                        <div className="flex flex-col gap-8 py-4">
-                            <div>
-                                <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest mb-2">OpEx Density</p>
-                                <p className="text-3xl font-black text-slate-900">${costPerTon} <span className="text-xs font-normal text-slate-400 font-mono tracking-tight">/ CYCLE</span></p>
-                            </div>
-                            <div>
-                                <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest mb-2">Projected Alpha Gradient</p>
-                                <div className="flex items-center gap-3">
-                                    <p className="text-3xl font-black text-emerald">+12.4%</p>
-                                    <span className="tag tag-success">Optimized</span>
+                    <div className="mt-8">
+                        <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest mb-4">Executive ROI Forecast</p>
+                        <div className="p-6 rounded-2xl bg-slate-900 text-white shadow-xl relative overflow-hidden">
+                            <div className="absolute top-0 right-0 w-24 h-24 bg-emerald/10 rounded-full blur-3xl -mr-12 -mt-12"></div>
+                            <div className="relative z-10 flex justify-between items-center">
+                                <div>
+                                    <p className="text-[9px] font-black text-emerald uppercase tracking-widest mb-1">Projected OpEx Density</p>
+                                    <p className="stat-value text-2xl">${costPerTon}</p>
+                                </div>
+                                <div className="text-right">
+                                    <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1">Alpha Gradient</p>
+                                    <p className="stat-value text-2xl text-emerald">+12.4%</p>
                                 </div>
                             </div>
                         </div>
-                    )}
+                    </div>
                 </Card>
 
-                <Card title="Global Compliance Shield">
+                <Leaderboard data={leaderboardData} currentUserEmail={null} title="Sector Performance Matrix" />
+
+                <Card title="Compliance Shield">
                     {isLoading ? <Skeleton height="150px"/> : (
                         <div className="flex flex-col items-center justify-center h-full py-6">
                             <div className="relative group">

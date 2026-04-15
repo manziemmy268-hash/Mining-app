@@ -24,7 +24,7 @@ const Navbar = () => {
       <div className="flex items-center gap-6">
         <div className="flex flex-col items-end">
             <p className="text-[11px] font-black leading-none mb-1 tracking-tight text-slate-100 italic">
-                {user?.email.split('@')[0].toUpperCase()}
+                {user?.email?.split('@')[0]?.toUpperCase() || 'USER'}
             </p>
             <span className={`text-[9px] font-black uppercase tracking-[0.1em] px-2 py-0.5 rounded ${
                 user?.role === 'General Manager' ? 'bg-emerald/10 text-emerald-400' :
